@@ -98,7 +98,7 @@ class RulerPickerState extends State<RulerPicker> {
   double lastOffset = 0;
   bool isPosFixed = false;
   String value = '';
-  ScrollController? scrollController;
+  late ScrollController scrollController;
   Map<int, ScaleLineStyle> _scaleLineStyleMap = {};
 
   @override
@@ -109,20 +109,15 @@ class RulerPickerState extends State<RulerPicker> {
       _scaleLineStyleMap[element.scale] = element;
     });
 
-    scrollController = ScrollController();
     double initValueOffset =
         (widget.initValue - widget.beginValue) * _ruleScaleInterval;
+    scrollController = ScrollController(
+        initialScrollOffset: initValueOffset > 0 ? initValueOffset : 0);
 
-    if (initValueOffset > 0) {
-      Future.delayed(Duration.zero, () {
-        scrollController?.jumpTo(initValueOffset);
-      });
-    }
-
-    scrollController?.addListener(() {
+    scrollController.addListener(() {
       setState(() {
         int currentScale =
-            (scrollController?.offset ?? 0) ~/ _ruleScaleInterval.toInt();
+            scrollController.offset ~/ _ruleScaleInterval.toInt();
 
         if (currentScale < 0) currentScale = 0;
 
@@ -256,14 +251,13 @@ class RulerPickerState extends State<RulerPicker> {
 
 //使得尺子刻度和指示器对齐
   void fixOffset() {
-    if (scrollController == null) return;
-    int tempFixedOffset = (scrollController!.offset + 0.5) ~/ 1;
+    int tempFixedOffset = (scrollController.offset + 0.5) ~/ 1;
 
     double fixedOffset = (tempFixedOffset + _ruleScaleInterval / 2) ~/
         _ruleScaleInterval.toInt() *
         _ruleScaleInterval;
     Future.delayed(Duration.zero, () {
-      scrollController!.animateTo(fixedOffset,
+      scrollController.animateTo(fixedOffset,
           duration: Duration(milliseconds: 50), curve: Curves.bounceInOut);
     });
   }
@@ -329,7 +323,7 @@ class RulerPickerState extends State<RulerPicker> {
   @override
   void dispose() {
     super.dispose();
-    scrollController?.dispose();
+    scrollController.dispose();
   }
 
   @override
@@ -341,7 +335,7 @@ class RulerPickerState extends State<RulerPicker> {
   void setPositionByValue(int value) {
     double targetValue = (value - widget.beginValue) * _ruleScaleInterval;
     if (targetValue < 0) targetValue = 0;
-    scrollController?.jumpTo(targetValue.toDouble());
+    scrollController.jumpTo(targetValue.toDouble());
   }
 }
 

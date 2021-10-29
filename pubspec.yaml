@@ -1,6 +1,6 @@
 name: flutter_ruler_picker
-description: A new Flutter package project.
-version: 1.0.0
+description: ruler picker
+version: 1.0.1
 homepage: https://github.com/lazyee/flutter_ruler_picker.git
 
 environment:
