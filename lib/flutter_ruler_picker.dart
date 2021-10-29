@@ -87,7 +87,7 @@ class RulerPicker extends StatefulWidget {
     this.rulerBackgroundColor = Colors.white,
     this.controller,
   }) : assert(endValue > beginValue,
-            initValue >= beginValue || initValue <= endValue);
+            initValue >= beginValue && initValue <= endValue);
   @override
   State<StatefulWidget> createState() {
     return RulerPickerState();
