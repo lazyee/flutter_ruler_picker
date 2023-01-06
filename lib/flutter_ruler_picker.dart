@@ -111,6 +111,7 @@ class RulerPickerState extends State<RulerPicker> {
 
     double initValueOffset =
         (widget.initValue - widget.beginValue) * _ruleScaleInterval;
+
     scrollController = ScrollController(
         initialScrollOffset: initValueOffset > 0 ? initValueOffset : 0);
 
@@ -214,12 +215,7 @@ class RulerPickerState extends State<RulerPicker> {
   }
 
   Widget _buildRulerScale(BuildContext context, int index) {
-    // print('_buildRulerScale:$index');
-
     return Container(
-      margin: EdgeInsets.only(
-          left: isFirst(index) ? (widget.width - _ruleScaleInterval) / 2 : 0,
-          right: isLast(index) ? (widget.width - _ruleScaleInterval) / 2 : 0),
       width: _ruleScaleInterval,
       child: Stack(
         clipBehavior: Clip.none,
@@ -239,7 +235,7 @@ class RulerPickerState extends State<RulerPicker> {
                       style: widget.rulerScaleTextStyle,
                     ),
                   )
-                : Container(),
+                : SizedBox(),
           ),
         ],
       ),
@@ -275,6 +271,10 @@ class RulerPickerState extends State<RulerPicker> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: EdgeInsets.only(
+
+          // right: widget.width - _ruleScaleInterval
+          ),
       width: widget.width,
       height: widget.height + widget.rulerMarginTop,
       child: Stack(
@@ -305,6 +305,10 @@ class RulerPickerState extends State<RulerPicker> {
                         height: widget.height,
                         color: widget.rulerBackgroundColor,
                         child: ListView.builder(
+                          padding: EdgeInsets.only(
+                              left: (widget.width - _ruleScaleInterval) / 2,
+                              right: (widget.width - _ruleScaleInterval) / 2),
+                          itemExtent: _ruleScaleInterval,
                           itemCount: widget.endValue - widget.beginValue + 1,
                           controller: scrollController,
                           scrollDirection: Axis.horizontal,
@@ -335,6 +339,7 @@ class RulerPickerState extends State<RulerPicker> {
   void setPositionByValue(int value) {
     double targetValue = (value - widget.beginValue) * _ruleScaleInterval;
     if (targetValue < 0) targetValue = 0;
+
     scrollController.jumpTo(targetValue.toDouble());
   }
 }
