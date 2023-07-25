@@ -44,7 +44,7 @@ class _MyHomePageState2 extends State<MyHomePage> {
 class _MyHomePageState extends State<MyHomePage> {
   RulerPickerController? _rulerPickerController;
 
-  int currentValue = 60;
+  int currentValue = 4000;
 
   @override
   void initState() {
@@ -86,9 +86,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 50),
             RulerPicker(
-              // controller: _rulerPickerController!,
+              controller: _rulerPickerController!,
               beginValue: 30,
-              endValue: 400,
+              endValue: 50000,
               initValue: currentValue,
               scaleLineStyleList: [
                 ScaleLineStyle(
