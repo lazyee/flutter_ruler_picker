@@ -48,7 +48,7 @@ typedef void ValueChangedCallback(int value);
 /// 可以传入MediaQuery.of(context).size.width
 class RulerPicker extends StatefulWidget {
   final ValueChangedCallback onValueChange;
-  final String Function(int index, int rulerScaleValue)? onBuildRulerScalueText;
+  final String Function(int index, int rulerScaleValue)? onBuildRulerScaleText;
   final double width;
   final double height;
   final int beginValue;
@@ -60,6 +60,7 @@ class RulerPicker extends StatefulWidget {
   final double rulerMarginTop;
   final Color rulerBackgroundColor;
   final RulerPickerController? controller;
+  final int factorValue;
 
   RulerPicker({
     required this.beginValue,
@@ -67,6 +68,7 @@ class RulerPicker extends StatefulWidget {
     required this.onValueChange,
     required this.width,
     required this.height,
+    this.factorValue = 1,
     this.rulerMarginTop = 0,
     this.scaleLineStyleList = const [
       ScaleLineStyle(
@@ -82,12 +84,13 @@ class RulerPicker extends StatefulWidget {
       fontSize: 14,
     ),
     this.marker,
-    this.onBuildRulerScalueText,
+    this.onBuildRulerScaleText,
     this.initValue = 0,
     this.rulerBackgroundColor = Colors.white,
     this.controller,
-  }) : assert(endValue > beginValue,
-            initValue >= beginValue && initValue <= endValue);
+  }) : assert(
+    endValue > beginValue,
+    initValue >= beginValue && initValue <= endValue);
   @override
   State<StatefulWidget> createState() {
     return RulerPickerState();
@@ -100,11 +103,13 @@ class RulerPickerState extends State<RulerPicker> {
   String value = '';
   late ScrollController scrollController;
   Map<int, ScaleLineStyle> _scaleLineStyleMap = {};
+  late int itemCount;
 
   @override
   void initState() {
     super.initState();
 
+    itemCount = ((widget.endValue - widget.beginValue) / widget.factorValue).truncate() + 1;
     widget.scaleLineStyleList.forEach((element) {
       _scaleLineStyleMap[element.scale] = element;
     });
@@ -122,7 +127,7 @@ class RulerPickerState extends State<RulerPicker> {
 
         if (currentScale < 0) currentScale = 0;
 
-        int currentValue = currentScale + widget.beginValue;
+        int currentValue = currentScale * widget.factorValue + widget.beginValue;
         if (currentValue > widget.endValue) currentValue = widget.endValue;
         widget.onValueChange(currentValue);
       });
@@ -175,7 +180,7 @@ class RulerPickerState extends State<RulerPicker> {
   }
 
   bool isLast(int index) {
-    if (index == (widget.endValue - widget.beginValue)) return true;
+    if (index == ((widget.endValue - widget.beginValue) / widget.factorValue).truncate()) return true;
     return false;
   }
 
@@ -260,12 +265,12 @@ class RulerPickerState extends State<RulerPicker> {
 
   ///获取尺子的刻度提示文字
   String getRulerScaleText(int index) {
-    int rulerScaleValue = index + widget.beginValue;
-    if (widget.onBuildRulerScalueText == null) {
+    int rulerScaleValue = index * widget.factorValue + widget.beginValue;
+    if (widget.onBuildRulerScaleText == null) {
       return rulerScaleValue.toString();
     }
 
-    return widget.onBuildRulerScalueText!.call(index, rulerScaleValue);
+    return widget.onBuildRulerScaleText!.call(index, rulerScaleValue);
   }
 
   @override
@@ -309,7 +314,7 @@ class RulerPickerState extends State<RulerPicker> {
                               left: (widget.width - _ruleScaleInterval) / 2,
                               right: (widget.width - _ruleScaleInterval) / 2),
                           itemExtent: _ruleScaleInterval,
-                          itemCount: widget.endValue - widget.beginValue + 1,
+                          itemCount: itemCount,
                           controller: scrollController,
                           scrollDirection: Axis.horizontal,
                           itemBuilder: _buildRulerScale,
@@ -337,7 +342,7 @@ class RulerPickerState extends State<RulerPicker> {
 
   /// 根据数值设置标记位置
   void setPositionByValue(int value) {
-    double targetValue = (value - widget.beginValue) * _ruleScaleInterval;
+    double targetValue = ((value - widget.beginValue)/ widget.factorValue).truncate() * _ruleScaleInterval;
     if (targetValue < 0) targetValue = 0;
 
     scrollController.jumpTo(targetValue.toDouble());

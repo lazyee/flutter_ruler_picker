@@ -27,19 +27,19 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState2 extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: ListView.builder(
-            itemCount: 40000,
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) {
-              return Padding(
-                  padding: EdgeInsets.all(100), child: Text("index:${index}"));
-            }));
-  }
-}
+// class _MyHomePageState2 extends State<MyHomePage> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//         body: ListView.builder(
+//             itemCount: 40000,
+//             scrollDirection: Axis.horizontal,
+//             itemBuilder: (context, index) {
+//               return Padding(
+//                   padding: EdgeInsets.all(100), child: Text("index:${index}"));
+//             }));
+//   }
+// }
 
 class _MyHomePageState extends State<MyHomePage> {
   RulerPickerController? _rulerPickerController;
@@ -88,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
             RulerPicker(
               controller: _rulerPickerController!,
               beginValue: 30,
+              // factorValue:20,
               endValue: 50000,
               initValue: currentValue,
               scaleLineStyleList: [
