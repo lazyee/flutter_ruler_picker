@@ -1,3 +1,5 @@
+## [1.0.4] - 2023.08.21
+add factorValue
 ## [1.0.3] - 2023.01.06
 
 fix some bug
