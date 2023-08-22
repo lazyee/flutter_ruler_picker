@@ -33,42 +33,38 @@ class _TrianglePainter extends CustomPainter {
 /// The controller for the ruler picker
 /// init the ruler value from the controller
 /// 用于 RulerPicker 的控制器，可以在构造函数里初始化默认值
-class RulerPickerController extends ValueNotifier<int> {
-  RulerPickerController({int value = 0}) : super(value);
-  int get value => super.value;
-  set value(int newValue) {
+class RulerPickerController extends ValueNotifier<num> {
+  RulerPickerController({num value = 0}) : super(value);
+  num get value => super.value;
+  set value(num newValue) {
     super.value = newValue;
   }
 }
 
-typedef void ValueChangedCallback(int value);
+typedef void ValueChangedCallback(num value);
 
 /// RulerPicker 标尺选择器
 /// [width] 必须是具体的值，包括父级container的width，不能是 double.infinity，
 /// 可以传入MediaQuery.of(context).size.width
 class RulerPicker extends StatefulWidget {
-  final ValueChangedCallback onValueChange;
-  final String Function(int index, int rulerScaleValue)? onBuildRulerScaleText;
+  final ValueChangedCallback onValueChanged;
+  final String Function(int index, num rulerScaleValue) onBuildRulerScaleText;
   final double width;
   final double height;
-  final int beginValue;
-  final int endValue;
-  final int initValue;
   final TextStyle rulerScaleTextStyle;
   final List<ScaleLineStyle> scaleLineStyleList;
+  final List<RulerRange> ranges;
   final Widget? marker;
   final double rulerMarginTop;
   final Color rulerBackgroundColor;
   final RulerPickerController? controller;
-  final int factorValue;
 
   RulerPicker({
-    required this.beginValue,
-    required this.endValue,
-    required this.onValueChange,
+    required this.onValueChanged,
     required this.width,
     required this.height,
-    this.factorValue = 1,
+    required this.onBuildRulerScaleText,
+    this.ranges = const [],
     this.rulerMarginTop = 0,
     this.scaleLineStyleList = const [
       ScaleLineStyle(
@@ -84,13 +80,9 @@ class RulerPicker extends StatefulWidget {
       fontSize: 14,
     ),
     this.marker,
-    this.onBuildRulerScaleText,
-    this.initValue = 0,
     this.rulerBackgroundColor = Colors.white,
     this.controller,
-  }) : assert(
-    endValue > beginValue,
-    initValue >= beginValue && initValue <= endValue);
+  });
   @override
   State<StatefulWidget> createState() {
     return RulerPickerState();
@@ -103,41 +95,43 @@ class RulerPickerState extends State<RulerPicker> {
   String value = '';
   late ScrollController scrollController;
   Map<int, ScaleLineStyle> _scaleLineStyleMap = {};
-  late int itemCount;
+  int itemCount = 0;
 
   @override
   void initState() {
     super.initState();
+    widget.ranges.forEach((element) {
+      itemCount += ((element.end - element.begin) / element.scale).truncate();
+    });
 
-    itemCount = ((widget.endValue - widget.beginValue) / widget.factorValue).truncate() + 1;
+    itemCount += 1;
+
     widget.scaleLineStyleList.forEach((element) {
       _scaleLineStyleMap[element.scale] = element;
     });
 
-    double initValueOffset =
-        (widget.initValue - widget.beginValue) * _ruleScaleInterval;
+    double initValueOffset = getPositionByValue(widget.controller?.value ?? 0);
 
     scrollController = ScrollController(
         initialScrollOffset: initValueOffset > 0 ? initValueOffset : 0);
 
-    scrollController.addListener(() {
-      setState(() {
-        int currentScale =
-            scrollController.offset ~/ _ruleScaleInterval.toInt();
+    scrollController.addListener(_onValueChanged);
 
-        if (currentScale < 0) currentScale = 0;
-
-        int currentValue = currentScale * widget.factorValue + widget.beginValue;
-        if (currentValue > widget.endValue) currentValue = widget.endValue;
-        widget.onValueChange(currentValue);
-      });
-    });
     widget.controller?.addListener(() {
-      if (widget.controller!.value >= widget.beginValue &&
-          widget.controller!.value <= widget.endValue) {
-        setPositionByValue(widget.controller?.value ?? 0);
-      }
+      setPositionByValue(widget.controller?.value ?? 0);
     });
+  }
+
+  void _onValueChanged() {
+    int currentIndex = scrollController.offset ~/ _ruleScaleInterval.toInt();
+
+    if (currentIndex < 0) currentIndex = 0;
+    num currentValue = getRulerScaleValue(currentIndex);
+
+    var lastConfig = widget.ranges.last;
+    if (currentValue > lastConfig.end) currentValue = lastConfig.end;
+
+    widget.onValueChanged(currentValue);
   }
 
   /// default mark
@@ -170,18 +164,6 @@ class RulerPickerState extends State<RulerPicker> {
         ),
       ),
     );
-  }
-
-  // bool get isFirstOrLast => index == 0 ||
-  bool isFirst(int index) {
-    if (index == 0) return true;
-
-    return false;
-  }
-
-  bool isLast(int index) {
-    if (index == ((widget.endValue - widget.beginValue) / widget.factorValue).truncate()) return true;
-    return false;
   }
 
   ///绘制刻度线
@@ -230,13 +212,14 @@ class RulerPickerState extends State<RulerPicker> {
               child: _buildRulerScaleLine(index)),
           Positioned(
             bottom: 5,
-            width: 50,
-            left: -25 + _ruleScaleInterval / 2,
+            width: 100,
+            left: -50 + _ruleScaleInterval / 2,
             child: index % 10 == 0
                 ? Container(
                     alignment: Alignment.center,
                     child: Text(
-                      getRulerScaleText(index),
+                      widget.onBuildRulerScaleText(
+                          index, getRulerScaleValue(index)),
                       style: widget.rulerScaleTextStyle,
                     ),
                   )
@@ -263,14 +246,28 @@ class RulerPickerState extends State<RulerPicker> {
     });
   }
 
-  ///获取尺子的刻度提示文字
-  String getRulerScaleText(int index) {
-    int rulerScaleValue = index * widget.factorValue + widget.beginValue;
-    if (widget.onBuildRulerScaleText == null) {
-      return rulerScaleValue.toString();
+  ///获取尺子的刻度值
+  num getRulerScaleValue(int index) {
+    num rulerScaleValue = 0;
+
+    RulerRange? currentConfig;
+    for (RulerRange config in widget.ranges) {
+      currentConfig = config;
+      if (currentConfig == widget.ranges.last) {
+        break;
+      }
+      var totalCount = ((config.end - config.begin) / config.scale).truncate();
+
+      if (index <= totalCount) {
+        break;
+      } else {
+        index -= totalCount;
+      }
     }
 
-    return widget.onBuildRulerScaleText!.call(index, rulerScaleValue);
+    rulerScaleValue = index * currentConfig!.scale + currentConfig!.begin;
+
+    return rulerScaleValue;
   }
 
   @override
@@ -340,12 +337,27 @@ class RulerPickerState extends State<RulerPicker> {
     super.didUpdateWidget(oldWidget);
   }
 
-  /// 根据数值设置标记位置
-  void setPositionByValue(int value) {
-    double targetValue = ((value - widget.beginValue)/ widget.factorValue).truncate() * _ruleScaleInterval;
-    if (targetValue < 0) targetValue = 0;
+  double getPositionByValue(num value) {
+    double offsetValue = 0;
+    for (RulerRange config in widget.ranges) {
+      if (config.begin <= value && config.end >= value) {
+        offsetValue +=
+            ((value - config.begin) / config.scale) * _ruleScaleInterval;
+        break;
+      } else {
+        var totalCount =
+            ((config.end - config.begin) / config.scale).truncate();
+        offsetValue += totalCount * _ruleScaleInterval;
+      }
+    }
+    return offsetValue;
+  }
 
-    scrollController.jumpTo(targetValue.toDouble());
+  /// 根据数值设置标记位置
+  void setPositionByValue(num value) {
+    double offsetValue = getPositionByValue(value);
+    scrollController.jumpTo(offsetValue);
+    fixOffset();
   }
 }
 
@@ -360,5 +372,16 @@ class ScaleLineStyle {
     required this.color,
     required this.width,
     required this.height,
+  });
+}
+
+class RulerRange {
+  final double scale;
+  final int begin;
+  final int end;
+  const RulerRange({
+    required this.begin,
+    required this.end,
+    required this.scale,
   });
 }

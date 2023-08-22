@@ -23,36 +23,21 @@ class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
   @override
-  // _MyHomePageState2 createState() => _MyHomePageState2();
   _MyHomePageState createState() => _MyHomePageState();
 }
-
-// class _MyHomePageState2 extends State<MyHomePage> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//         body: ListView.builder(
-//             itemCount: 40000,
-//             scrollDirection: Axis.horizontal,
-//             itemBuilder: (context, index) {
-//               return Padding(
-//                   padding: EdgeInsets.all(100), child: Text("index:${index}"));
-//             }));
-//   }
-// }
 
 class _MyHomePageState extends State<MyHomePage> {
   RulerPickerController? _rulerPickerController;
 
-  int currentValue = 4000;
+  num currentValue = 40;
 
   @override
   void initState() {
     super.initState();
-    _rulerPickerController = RulerPickerController(value: 0);
+    _rulerPickerController = RulerPickerController(value: currentValue);
   }
 
-  Widget _buildBtn(int value) {
+  Widget _buildBtn(num value) {
     return InkWell(
       onTap: () {
         _rulerPickerController?.value = value;
@@ -78,20 +63,26 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              currentValue.toString(),
-              style: TextStyle(
+              currentValue.toStringAsFixed(1),
+              style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: 80),
             ),
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
             RulerPicker(
               controller: _rulerPickerController!,
-              beginValue: 30,
-              // factorValue:20,
-              endValue: 50000,
-              initValue: currentValue,
-              scaleLineStyleList: [
+              onBuildRulerScaleText: (index, value) {
+                return value.toInt().toString();
+              },
+              ranges: const [
+                RulerRange(begin: 0, end: 10, scale: 0.1),
+                RulerRange(begin: 10, end: 100, scale: 1),
+                RulerRange(begin: 100, end: 1000, scale: 10),
+                RulerRange(begin: 1000, end: 10000, scale: 100),
+                RulerRange(begin: 10000, end: 100000, scale: 1000)
+              ],
+              scaleLineStyleList: const [
                 ScaleLineStyle(
                     color: Colors.grey, width: 1.5, height: 30, scale: 0),
                 ScaleLineStyle(
@@ -99,10 +90,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 ScaleLineStyle(
                     color: Colors.grey, width: 1, height: 15, scale: -1)
               ],
-              // onBuildRulerScalueText: (index, scaleValue) {
-              //   return ''.toString();
-              // },
-              onValueChange: (value) {
+
+              onValueChanged: (value) {
                 setState(() {
                   currentValue = value;
                 });
@@ -121,11 +110,13 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                _buildBtn(8.4),
+                SizedBox(width: 10),
                 _buildBtn(30),
                 SizedBox(width: 10),
-                _buildBtn(50),
+                _buildBtn(50.5),
                 SizedBox(width: 10),
-                _buildBtn(100),
+                _buildBtn(1000),
                 SizedBox(width: 10),
                 _buildBtn(40000),
                 SizedBox(width: 10),
