@@ -382,6 +382,6 @@ class RulerRange {
   const RulerRange({
     required this.begin,
     required this.end,
-    required this.scale,
+    this.scale = 1,
   });
 }

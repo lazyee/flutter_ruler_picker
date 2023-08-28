@@ -31,13 +31,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   num currentValue = 40;
 
+  List<RulerRange> ranges = const [
+    RulerRange(begin: 0, end: 10, scale: 0.1),
+    RulerRange(begin: 10, end: 100, scale: 1),
+    RulerRange(begin: 100, end: 1000, scale: 10),
+    RulerRange(begin: 1000, end: 10000, scale: 100),
+    RulerRange(begin: 10000, end: 100000, scale: 1000)
+  ];
+
   @override
   void initState() {
     super.initState();
     _rulerPickerController = RulerPickerController(value: currentValue);
   }
 
-  Widget _buildBtn(num value) {
+  Widget _buildPositionBtn(num value) {
     return InkWell(
       onTap: () {
         _rulerPickerController?.value = value;
@@ -47,6 +55,23 @@ class _MyHomePageState extends State<MyHomePage> {
           color: Colors.blue,
           child: Text(
             value.toString(),
+            style: TextStyle(color: Colors.white),
+          )),
+    );
+  }
+
+  Widget _buildChangeRangerBtn(String tip, List<RulerRange> rangeList) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          ranges = rangeList;
+        });
+      },
+      child: Container(
+          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+          color: Colors.blue,
+          child: Text(
+            tip,
             style: TextStyle(color: Colors.white),
           )),
     );
@@ -75,13 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onBuildRulerScaleText: (index, value) {
                 return value.toInt().toString();
               },
-              ranges: const [
-                RulerRange(begin: 0, end: 10, scale: 0.1),
-                RulerRange(begin: 10, end: 100, scale: 1),
-                RulerRange(begin: 100, end: 1000, scale: 10),
-                RulerRange(begin: 1000, end: 10000, scale: 100),
-                RulerRange(begin: 10000, end: 100000, scale: 1000)
-              ],
+              ranges: ranges,
               scaleLineStyleList: const [
                 ScaleLineStyle(
                     color: Colors.grey, width: 1.5, height: 30, scale: 0),
@@ -110,17 +129,30 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildBtn(8.4),
+                _buildPositionBtn(8.4),
                 SizedBox(width: 10),
-                _buildBtn(30),
+                _buildPositionBtn(30),
                 SizedBox(width: 10),
-                _buildBtn(50.5),
+                _buildPositionBtn(50.5),
                 SizedBox(width: 10),
-                _buildBtn(1000),
+                _buildPositionBtn(1000),
                 SizedBox(width: 10),
-                _buildBtn(40000),
+                _buildPositionBtn(40000),
                 SizedBox(width: 10),
-                _buildBtn(50000),
+                _buildPositionBtn(50000),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildChangeRangerBtn("[20,500],[40,200]", [
+                  RulerRange(begin: 20, end: 500),
+                  RulerRange(begin: 40, end: 200)
+                ]),
+                SizedBox(width: 10),
+                _buildChangeRangerBtn(
+                    "[100,500]", [RulerRange(begin: 100, end: 500)]),
               ],
             ),
           ],
