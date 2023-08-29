@@ -77,6 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  bool selected = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,6 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 return value.toInt().toString();
               },
               ranges: ranges,
+
               scaleLineStyleList: const [
                 ScaleLineStyle(
                     color: Colors.grey, width: 1.5, height: 30, scale: 0),
@@ -146,15 +149,15 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildChangeRangerBtn("[20,500],[40,200]", [
-                  RulerRange(begin: 20, end: 500),
-                  RulerRange(begin: 40, end: 200)
+                _buildChangeRangerBtn("[20,100,1],[100,200,0.1]", [
+                  RulerRange(begin: 20, end: 100, scale: 1),
+                  RulerRange(begin: 100, end: 200, scale: 0.1)
                 ]),
                 SizedBox(width: 10),
                 _buildChangeRangerBtn(
                     "[100,500]", [RulerRange(begin: 100, end: 500)]),
               ],
-            ),
+            )
           ],
         ),
       ),

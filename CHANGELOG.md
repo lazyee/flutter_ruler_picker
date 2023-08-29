@@ -1,3 +1,5 @@
+## [1.0.6] - 2023.08.29
+fix some bug
 ## [1.0.5] - 2023.08.22
 Change configuration mode
 ## [1.0.4] - 2023.08.21

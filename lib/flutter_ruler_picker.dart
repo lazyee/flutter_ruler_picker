@@ -100,11 +100,9 @@ class RulerPickerState extends State<RulerPicker> {
   @override
   void initState() {
     super.initState();
-    widget.ranges.forEach((element) {
-      itemCount += ((element.end - element.begin) / element.scale).truncate();
-    });
 
-    itemCount += 1;
+    itemCount = _calculateItemCount();
+    print(itemCount);
 
     widget.scaleLineStyleList.forEach((element) {
       _scaleLineStyleMap[element.scale] = element;
@@ -120,6 +118,16 @@ class RulerPickerState extends State<RulerPicker> {
     widget.controller?.addListener(() {
       setPositionByValue(widget.controller?.value ?? 0);
     });
+  }
+
+  int _calculateItemCount() {
+    int itemCount = 0;
+    widget.ranges.forEach((element) {
+      // print(element.end);
+      itemCount += ((element.end - element.begin) / element.scale).truncate();
+    });
+    itemCount += 1;
+    return itemCount;
   }
 
   void _onValueChanged() {
@@ -335,6 +343,34 @@ class RulerPickerState extends State<RulerPicker> {
   @override
   void didUpdateWidget(RulerPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (mounted) {
+      if (isRangesChanged(oldWidget)) {
+        Future.delayed(Duration.zero, () {
+          setState(() {
+            itemCount = _calculateItemCount();
+          });
+          _onValueChanged();
+        });
+      }
+    }
+  }
+
+  bool isRangesChanged(RulerPicker oldWidget) {
+    if (oldWidget.ranges.length != widget.ranges.length) {
+      return true;
+    }
+
+    if (widget.ranges.isEmpty) return false;
+    for (int i = 0; i < widget.ranges.length; i++) {
+      RulerRange oldRange = oldWidget.ranges[i];
+      RulerRange range = widget.ranges[i];
+      if (oldRange.begin != range.begin ||
+          oldRange.end != range.end ||
+          oldRange.scale != range.scale) {
+        return true;
+      }
+    }
+    return false;
   }
 
   double getPositionByValue(num value) {
@@ -344,7 +380,7 @@ class RulerPickerState extends State<RulerPicker> {
         offsetValue +=
             ((value - config.begin) / config.scale) * _ruleScaleInterval;
         break;
-      } else {
+      } else if (value >= config.begin) {
         var totalCount =
             ((config.end - config.begin) / config.scale).truncate();
         offsetValue += totalCount * _ruleScaleInterval;
